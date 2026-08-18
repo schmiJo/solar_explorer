@@ -1,0 +1,29 @@
+{
+  "name": "solar-system-explorer",
+  "version": "1.0.0",
+  "description": "An interactive 3D map of the solar system and the nearest stars, built from real catalogue data.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "verify": "esbuild scripts/verify-ephemeris.ts --bundle --platform=node --format=esm --outfile=node_modules/.cache/verify.mjs --log-level=error && node node_modules/.cache/verify.mjs",
+    "build:catalog": "node scripts/build-catalog.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "three": "^0.185.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "@types/three": "^0.185.4",
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.1"
+  },
+  "private": true,
+  "type": "module"
+}
