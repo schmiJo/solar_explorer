@@ -87,7 +87,7 @@ export class SystemView {
     this.sky = new Group();
     const skyRadius = 1e7;
     this.sky.add(createBackgroundStars(skyRadius));
-    const milkyWay = new Mesh(new SphereGeometry(skyRadius * 1.4, 48, 32), createMilkyWayMaterial(0.42));
+    const milkyWay = new Mesh(new SphereGeometry(skyRadius * 1.4, 48, 32), createMilkyWayMaterial(0.30));
     milkyWay.renderOrder = -200;
     milkyWay.frustumCulled = false;
     this.sky.add(milkyWay);
@@ -161,7 +161,7 @@ export class SystemView {
     if (node.atmosphere != null && node.atmosphereDensity) {
       view.atmosphere = new Mesh(
         new SphereGeometry(1.055, 48, 24),
-        createAtmosphereMaterial(node.atmosphere, node.atmosphereDensity * 1.5),
+        createAtmosphereMaterial(node.atmosphere, node.atmosphereDensity),
       );
       view.atmosphere.renderOrder = 5;
       // The shell must not inherit the spin, or the rim would rotate with it.
@@ -228,7 +228,7 @@ export class SystemView {
       } else {
         this.scale.mapPosition(view.absolute, view.display);
       }
-      view.displayRadius = this.scale.bodyRadius(view.node.radiusKm);
+      view.displayRadius = this.scale.bodyRadius(view.node.radiusKm, view.node.kind === 'star');
     }
   }
 
@@ -259,15 +259,15 @@ export class SystemView {
       const turns = node.rotationHours === 0 ? 0 : (jd * 24) / node.rotationHours;
       view.spin.rotation.y = turns * Math.PI * 2;
 
-      // Direction to the star, which is the light source for every surface.
-      tmpA.copy(starView.display).sub(view.display);
-      const starDistance = Math.max(tmpA.length(), 1e-9);
-      tmpA.divideScalar(starDistance);
+      // Direction to the star, taken from the true positions rather than the
+      // displayed ones: under schematic scaling a moon's drawn offset is a
+      // large fraction of its drawn distance to the star, which would light
+      // neighbouring moons from visibly different directions.
+      const distanceAu = Math.max(view.absolute.length(), 1e-12);
+      tmpA.copy(view.absolute).divideScalar(-distanceAu);
       if (node.kind === 'star') tmpA.set(0, 0, 1);
-
-      const distanceAu = view.absolute.length();
       const illumination = node.kind === 'star' ? 1
-        : Math.min(2.4, Math.max(0.22, Math.pow(this.model.luminosity / Math.max(distanceAu * distanceAu, 1e-6), 0.32)));
+        : Math.min(2.4, Math.max(0.22, Math.pow(this.model.luminosity / (distanceAu * distanceAu), 0.32)));
 
       applyLighting(view, tmpA, this.starColor, illumination, time);
 
@@ -306,11 +306,11 @@ export class SystemView {
     this.corona.quaternion.copy(camera.quaternion);
     const coronaDistance = Math.max(this.corona.position.distanceTo(camera.position), 1e-9);
     // Never let the corona shrink below a visible glow, nor swamp the screen.
-    const coronaSize = Math.max(starView.displayRadius * 3.4, coronaDistance * 0.012);
-    this.corona.scale.setScalar(Math.min(coronaSize, coronaDistance * 0.55));
+    const coronaSize = Math.max(starView.displayRadius * 3.0, coronaDistance * 0.010);
+    this.corona.scale.setScalar(Math.min(coronaSize, coronaDistance * 0.22));
     const coronaUniforms = uniformsOf(this.corona);
     coronaUniforms.uTime.value = time;
-    coronaUniforms.uIntensity.value = 1.15 * smoothstep(0.4, 3, starView.screen.radius);
+    coronaUniforms.uIntensity.value = 1.0 * smoothstep(0.4, 3, starView.screen.radius);
 
     // ---- orbits
     for (const view of this.views) {

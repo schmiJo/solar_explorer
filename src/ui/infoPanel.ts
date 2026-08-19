@@ -91,7 +91,11 @@ export function starContent(entry: StarEntry, onEnter?: () => void): PanelConten
     { label: 'Spectral type', value: entry.spectral || '—' },
     { label: 'Temperature', value: `${Math.round(entry.temp).toLocaleString()} K` },
     { label: 'Apparent magnitude', value: entry.vmag != null ? entry.vmag.toFixed(2) : '—' },
-    { label: 'Known planets', value: planets.length ? `${planets.length}` : 'None catalogued' },
+    {
+      label: 'Known planets',
+      value: entry.distanceLy === 0 ? '8, and you are on one'
+        : planets.length ? `${planets.length}` : 'None catalogued',
+    },
   ];
   if (entry.system) {
     facts.push(

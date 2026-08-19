@@ -109,20 +109,21 @@ void main() {
   vec3 d = normalize(vDirection);
   // The geometry is already in galactic coordinates, so the plane is y = 0.
   float latitude = abs(d.y);
-  float band = exp(-pow(latitude / 0.13, 1.7));
+  float band = exp(-pow(latitude / 0.10, 1.5));
 
   // The bulge toward the galactic centre, which sits at +x.
   float toCentre = max(dot(d, vec3(1.0, 0.0, 0.0)), 0.0);
-  float bulge = exp(-pow(latitude / 0.26, 2.0)) * pow(toCentre, 3.0);
+  float bulge = exp(-pow(latitude / 0.15, 2.0)) * pow(toCentre, 4.0);
 
-  float clouds = bandNoise(d * 7.0) * 0.65 + bandNoise(d * 19.0) * 0.35;
-  float lanes = bandNoise(d * 11.0 + 40.0);
+  float clouds = bandNoise(d * 12.0) * 0.55 + bandNoise(d * 34.0) * 0.45;
+  float lanes = bandNoise(d * 17.0 + 40.0);
 
-  float glow = band * (0.35 + clouds * 0.9) + bulge * 1.1;
+  float glow = band * (0.25 + clouds * 0.75) + bulge * 0.7;
   // Dark nebulae cutting through the band.
-  glow *= mix(0.28, 1.0, smoothstep(0.34, 0.66, lanes));
+  glow *= mix(0.22, 1.0, smoothstep(0.34, 0.66, lanes));
+  glow *= 0.16;
 
-  vec3 color = mix(uDust, uCore, clamp(bulge * 1.5 + toCentre * 0.25, 0.0, 1.0));
+  vec3 color = mix(uDust, uCore, clamp(bulge * 2.2, 0.0, 1.0));
   gl_FragColor = vec4(color * glow * uBrightness, 1.0);
 }
 `;
@@ -146,7 +147,7 @@ export function createMilkyWayMaterial(brightness = 1): ShaderMaterial {
     uniforms: {
       uBrightness: { value: brightness },
       uCore: { value: new Color(0xffe6c0) },
-      uDust: { value: new Color(0x9fb4e0) },
+      uDust: { value: new Color(0xc2d2ee) },
     },
   });
 }

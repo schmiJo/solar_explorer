@@ -40,12 +40,12 @@ void main() {
   float fine = fbm(samplePos * 3.5 + vec3(0.0, 0.0, uTime * 0.05), 3, 2.0, 0.5) * 0.5 + 0.5;
 
   // Two falloffs stacked: a tight inner blaze and a broad outer halo.
-  float inner = exp(-r * 9.0);
-  float outer = exp(-r * 2.6) * (0.45 + rays * 0.85) * (0.7 + fine * 0.5);
-  float edge = 1.0 - smoothstep(0.75, 1.0, r);
+  float inner = exp(-r * 14.0);
+  float outer = exp(-r * 4.2) * (0.4 + rays * 0.8) * (0.7 + fine * 0.5);
+  float edge = 1.0 - smoothstep(0.7, 1.0, r);
 
-  float intensity = (inner * 1.6 + outer * 0.7) * edge * uIntensity;
-  vec3 color = mix(uColor, vec3(1.0), inner * 0.75);
+  float intensity = (inner * 0.9 + outer * 0.32) * edge * uIntensity;
+  vec3 color = mix(uColor, vec3(1.0), inner * 0.7);
   gl_FragColor = vec4(color * intensity, intensity);
 }
 `;

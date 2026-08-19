@@ -45,7 +45,7 @@ export class Viewer {
       new Vector2(window.innerWidth, window.innerHeight),
       0.62,   // strength
       0.7,    // radius
-      0.55,   // threshold — only genuinely bright things bloom
+      0.72,   // threshold — only genuinely bright things bloom
     );
     this.composer.addPass(this.bloom);
     this.composer.addPass(new OutputPass());

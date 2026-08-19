@@ -88,7 +88,7 @@ vec3 perturbNormal(vec3 p, int style, float strength) {
   vec3 tangentB = cross(p, tangentA);
   float ha = terrain(normalize(p + tangentA * e), style);
   float hb = terrain(normalize(p + tangentB * e), style);
-  return normalize(p - strength * ((ha - h) * tangentA + (hb - h) * tangentB) / e * 0.02);
+  return normalize(p - strength * ((ha - h) * tangentA + (hb - h) * tangentB) / e * 0.006);
 }
 
 /** Latitude-banded flow used by both gas and ice giants. */
@@ -180,8 +180,8 @@ void main() {
       // Earth-like: ocean, shelf, land, and ice at the poles.
       float sea = 0.02;
       float land = smoothstep(sea, sea + 0.06, h);
-      vec3 deep = vec3(0.016, 0.055, 0.16);
-      vec3 shallow = vec3(0.05, 0.26, 0.42);
+      vec3 deep = vec3(0.022, 0.075, 0.20);
+      vec3 shallow = vec3(0.06, 0.30, 0.47);
       vec3 ocean = mix(deep, shallow, smoothstep(-0.25, sea, h));
       float dryness = fbm(n * 5.0 + 71.0, 4, 2.0, 0.5) * 0.5 + 0.5;
       vec3 vegetation = mix(vec3(0.09, 0.24, 0.09), vec3(0.20, 0.30, 0.12), dryness);
@@ -333,7 +333,7 @@ void main() {
   vec3 p = n * 3.2 + vec3(uTime * 0.01, 0.0, 0.0) + uSeed;
   float cover = warpedFbm(p, 1.1, 6) * 0.5 + 0.5;
   float wisps = ridged(n * 8.0 + uTime * 0.02, 4, 2.2, 0.5);
-  float density = smoothstep(uCoverage, uCoverage + 0.22, cover + wisps * 0.18);
+  float density = smoothstep(uCoverage, uCoverage + 0.30, cover + wisps * 0.14);
   if (density < 0.004) discard;
 
   vec3 N = normalize(vWorldNormal);
@@ -341,8 +341,8 @@ void main() {
   float diffuse = clamp((NdotL + 0.15) / 1.15, 0.0, 1.0);
   // Silver lining where we look through the edge of a sunlit cloud.
   float rim = pow(1.0 - max(dot(N, normalize(vViewDir)), 0.0), 2.0);
-  vec3 color = uLightColor * (0.85 + rim * 0.5) * (diffuse * 0.95 + 0.03);
-  gl_FragColor = vec4(color, density * 0.92);
+  vec3 color = uLightColor * (0.72 + rim * 0.32) * (diffuse * 0.95 + 0.03);
+  gl_FragColor = vec4(color, density * 0.82);
 }
 `;
 

@@ -70,7 +70,8 @@ class App {
     });
 
     this.applySystemCameraLimits();
-    this.focus('sun', false);
+    this.frameWholeSystem();
+    this.select(this.system.model.nodes[0].id);
     this.refreshNavigator();
     this.hud.setHeading('Solar System', 'Sol · G2V · you are here', false);
 
@@ -100,8 +101,23 @@ class App {
     }
   }
 
+  /** Pull back far enough to hold the outermost planet's orbit in frame. */
+  private frameWholeSystem(): void {
+    const model = this.system.model;
+    const planets = model.nodes.filter((n) => n.kind === 'planet' || n.kind === 'exoplanet');
+    // Frame the planets. Dwarf planets and comets range far wider, and letting
+    // them set the scale would leave everything worth seeing in a tiny knot.
+    const outermost = planets.length ? Math.max(...planets.map((n) => n.au)) : model.extent;
+    this.focusId = model.nodes[0].id;
+    this.system.computePositions(this.jd);
+    this.rig.moveOrigin(this.system.view(this.focusId)!.display, false);
+    this.rig.setDistance(this.scale.orbitRadius(outermost) * 2.4, false);
+    this.rig.setAngles(0.7, 1.02, false);
+    this.hud.setActive(this.focusId);
+  }
+
   private applySystemCameraLimits(): void {
-    const smallest = Math.min(...this.system.views.map((v) => this.scale.bodyRadius(v.node.radiusKm)));
+    const smallest = Math.min(...this.system.views.map((v) => this.scale.bodyRadius(v.node.radiusKm, v.node.kind === 'star')));
     this.rig.minDistance = Math.max(smallest * 1.15, 1e-8);
     this.rig.maxDistance = Math.max(this.scale.orbitRadius(this.system.model.extent) * 12, 40);
     this.rig.zoomSpeed = 1;
@@ -203,16 +219,13 @@ class App {
     this.system.showOrbits = true;
     this.mode = 'system';
     this.viewer.setScene(this.system.scene);
-    this.viewer.setBloom(0.62, 0.55);
+    this.viewer.setBloom(0.62, 0.72);
     this.applySystemCameraLimits();
     this.labels.clear();
     this.system.computePositions(this.jd);
 
     // Arrive looking at the star from slightly above the orbital plane.
-    this.focusId = model.nodes[0].id;
-    this.rig.moveOrigin(this.system.view(this.focusId)!.display, false);
-    this.rig.setDistance(this.scale.orbitRadius(model.extent) * 2.1, false);
-    this.rig.setAngles(0.7, 1.05, false);
+    this.frameWholeSystem();
     this.select(model.nodes[0].id);
     this.refreshNavigator();
 
@@ -435,6 +448,11 @@ class App {
   }
 
   private renderGalaxyLabels(): void {
+    // Labelling all 262 stars buries the map. Name the ones that carry planets,
+    // the immediate neighbours, and anything bright enough to have a real name.
+    const worthNaming = (entry: StarEntry): boolean =>
+      entry.system != null || entry.distanceLy < 8 || entry.weight > 0.45;
+
     const requests: LabelRequest[] = this.galaxy.entries.map((entry) => ({
       id: entry.id,
       text: entry.name,
@@ -444,7 +462,7 @@ class App {
       radius: 8,
       // Nearby stars and planet hosts get first claim on the screen.
       priority: (entry.system ? 60 : 20) + entry.weight * 20 - entry.distanceLy * 0.7,
-      visible: entry.screen.visible,
+      visible: entry.screen.visible && (worthNaming(entry) || entry.id === this.selectedStarId),
       selected: entry.id === this.selectedStarId,
       color: entryColor(entry),
       muted: !entry.system,
@@ -455,4 +473,7 @@ class App {
 
 const canvas = document.getElementById('view') as HTMLCanvasElement;
 const overlay = document.getElementById('overlay') as HTMLElement;
-new App(canvas, overlay);
+const app = new App(canvas, overlay);
+
+// Handy when tuning the scene from the browser console.
+if (import.meta.env.DEV) (window as unknown as { app: App }).app = app;

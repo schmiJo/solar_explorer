@@ -56,11 +56,19 @@ export class ScaleModel {
     return out.copy(au).multiplyScalar(this.orbitRadius(r) / r);
   }
 
-  /** Body radius in km to display radius. */
-  bodyRadius(km: number): number {
+  /**
+   * Body radius in km to display radius.
+   *
+   * Stars follow a gentler curve than everything else. One law cannot serve
+   * both: an exponent flat enough to keep the Sun from swallowing Mercury's
+   * orbit also inflates a 200 km moon until it rivals Saturn.
+   */
+  bodyRadius(km: number, isStar = false): number {
     const real = km / AU_KM;
     if (this.t === 0) return real;
-    const enlarged = 0.026 * Math.pow(km / EARTH_RADIUS_KM, 0.35);
+    const enlarged = isStar
+      ? 0.020 * Math.pow(km / EARTH_RADIUS_KM, 0.30)
+      : 0.021 * Math.pow(km / EARTH_RADIUS_KM, 0.55);
     return real + (enlarged - real) * this.t;
   }
 
@@ -72,7 +80,7 @@ export class ScaleModel {
     const real = aKm / AU_KM;
     if (this.t === 0) return real;
     const ratio = aKm / parentRadiusKm;
-    const spread = this.bodyRadius(parentRadiusKm) * (1.5 + 0.8 * Math.log10(1 + ratio));
+    const spread = this.bodyRadius(parentRadiusKm) * (1.6 + 0.9 * Math.log10(1 + ratio));
     return real + (spread - real) * this.t;
   }
 }

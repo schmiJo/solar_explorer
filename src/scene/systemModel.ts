@@ -137,7 +137,7 @@ export function buildSolarSystem(): SystemModel {
       color: p.color,
       atmosphere: p.atmosphere,
       atmosphereDensity: p.atmosphereDensity,
-      clouds: p.id === 'earth' ? 0.42 : undefined,
+      clouds: p.id === 'earth' ? 0.32 : undefined,
       rings: p.rings
         ? { inner: p.rings.inner, outer: p.rings.outer, detail: p.id === 'saturn' ? 1 : 0.22 }
         : undefined,
